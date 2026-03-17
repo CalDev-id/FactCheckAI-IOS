@@ -13,7 +13,7 @@ class NewsViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var errorMessage: String?
 
-    private let baseURL = "http://192.168.50.110:8000"
+    private let baseURL = "https://api.caldev.my.id"
     private var hasLoadedOnce = false
 
     func loadIfNeeded(force: Bool = false) async {
@@ -54,7 +54,7 @@ class DetailNewsViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var errorMessage: String?
 
-    let baseURL = "http://192.168.50.110:8000"
+    let baseURL = "https://api.caldev.my.id"
 
     func fetchDetail(newsId: String) async {
         guard let url = URL(string: "\(baseURL)/news/id/\(newsId)") else {
@@ -82,7 +82,7 @@ class ShareNewsViewModel: ObservableObject {
     @Published var isSuccess = false
     @Published var errorMessage: String?
 
-    private let baseURL = "http://192.168.50.110:8000"
+    private let baseURL = "https://api.caldev.my.id"
 
     // DTO LOKAL (PRIVATE)
     private struct SharePayload: Codable {

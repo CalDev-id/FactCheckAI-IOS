@@ -67,12 +67,32 @@ struct ProfileView: View {
 
             } else {
                 HStack {
-                    Spacer()
                     Image(systemName: "person.circle.fill")
                         .resizable()
                         .frame(width: 100, height: 100)
                         .foregroundStyle(.secondary)
+
+                    VStack(alignment: .leading) {
+                        HStack {
+                            Text(auth.userName ?? "No Name")
+                                .font(.title3)
+                                .bold()
+                            Image(systemName: "pencil.line")
+                                .bold()
+                                .font(.system(size: 17))
+                        }
+
+                        Text(auth.userEmail ?? "-")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+
                     Spacer()
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    showEditProfile = true
                 }
                 .listRowSeparator(.hidden)
             }

@@ -1,78 +1,106 @@
-//
-//  PredictWith.swift
-//  CekFakta
-//
-//  Created by Heical Chandra on 07/01/26.
-//
-
 import SwiftUI
+import UIKit
 
+// MARK: - Predict With Claim
 struct PredictWithClaim: View {
-    @State private var claim: String = ""
+    @StateObject private var vm = PredictionViewModel()
     @EnvironmentObject private var router: Router
+    @EnvironmentObject private var predictionStore: PredictionStore
+
+    @State private var hasNavigatedToResult = false
+
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
-                HStack {
-                    Button(action: { router.navigateBack() }) {
-                        Image(systemName: "chevron.left")
-                            .font(.system(size: 18, weight: .medium))
-                            .foregroundColor(.black)
-                            .padding(8)
-                    }
-                    Spacer()
-                }
-                Text("Claim Prediction")
-                    .font(.largeTitle.bold())
-                    .padding(.top, 10)
-                
-                Text("Enter a specific claim to analyze its validity.")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-                
-                // CLAIM FIELD
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Claim")
-                        .font(.headline)
-                    
-                    TextEditor(text: $claim)
-                        .frame(height: 140)
-                        .padding(10)
-                        .background(Color(.secondarySystemBackground))
-                        .cornerRadius(16)
-                }
-                
-                // BUTTON
-                Button(action: {
-                }) {
+        ZStack {
+            ScrollView(showsIndicators: false) {
+                VStack(alignment: .leading, spacing: 20) {
+
                     HStack {
-                        Spacer()
-                        Text("Predict")
-                            .font(.headline)
-                            .foregroundColor(.white)
+                        Button(action: { router.navigateBack() }) {
+                            Image(systemName: "chevron.left")
+                                .font(.system(size: 18, weight: .medium))
+                                .foregroundColor(.black)
+                                .padding(8)
+                        }
                         Spacer()
                     }
-                    .padding()
-                    .background(
-                        LinearGradient(colors: [Color.redPrimary, Color.redPrimary.opacity(0.7)],
-                                       startPoint: .topLeading,
-                                       endPoint: .bottomTrailing)
-                    )
-                    .cornerRadius(18)
-                    .shadow(color: .black.opacity(0.15), radius: 8, x: 0, y: 4)
+
+                    Text("Claim Prediction")
+                        .font(.largeTitle.bold())
+                        .padding(.top, 10)
+
+                    Text("Enter a specific claim to analyze its validity.")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+
+                    // CLAIM FIELD
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Claim")
+                            .font(.headline)
+
+                        TextEditor(text: $vm.claimInput)
+                            .frame(height: 140)
+                            .padding(10)
+                            .background(Color(.secondarySystemBackground))
+                            .cornerRadius(16)
+                    }
+
+                    // BUTTON
+                    Button {
+                        hideKeyboard()
+                        hasNavigatedToResult = false
+                        vm.predictWithClaim()
+                    } label: {
+                        HStack {
+                            Spacer()
+                            Text("Predict")
+                                .font(.headline)
+                                .foregroundColor(.white)
+                            Spacer()
+                        }
+                        .padding()
+                        .background(
+                            LinearGradient(
+                                colors: [
+                                    Color.redPrimary,
+                                    Color.redPrimary.opacity(0.7)
+                                ],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .cornerRadius(18)
+                        .shadow(color: .black.opacity(0.15), radius: 8, x: 0, y: 4)
+                    }
+                    .disabled(vm.claimInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+
+                    if !vm.errorMessage.isEmpty {
+                        Text("⚠️ \(vm.errorMessage)")
+                            .foregroundColor(.red)
+                            .padding(.top, 6)
+                    }
+
+                    Spacer(minLength: 30)
                 }
-                .padding(.top, 10)
-                
-                Spacer()
+                .padding()
             }
-            .padding()
+
+            if vm.isLoading {
+                LoadingView()
+            }
         }
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(true)
+        .onReceive(vm.$result.compactMap { $0 }) { news in
+            guard !hasNavigatedToResult else { return }
+            hasNavigatedToResult = true
+
+            predictionStore.latestPrediction = news
+            router.navigate(to: .predictResult)
+        }
     }
 }
-import SwiftUI
 
+// MARK: - Predict With Link
 struct PredictWithLink: View {
     @StateObject private var vm = PredictionViewModel()
     @EnvironmentObject private var router: Router
@@ -84,6 +112,7 @@ struct PredictWithLink: View {
         ZStack {
             ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 20) {
+
                     HStack {
                         Button(action: { router.navigateBack() }) {
                             Image(systemName: "chevron.left")
@@ -110,8 +139,8 @@ struct PredictWithLink: View {
 
                     Button {
                         hideKeyboard()
-                        hasNavigatedToResult = false // reset tiap kali analisis
-                        vm.predict()
+                        hasNavigatedToResult = false
+                        vm.predictWithLink()
                     } label: {
                         HStack {
                             Image(systemName: "sparkles")
@@ -119,19 +148,19 @@ struct PredictWithLink: View {
                         }
                         .frame(maxWidth: .infinity)
                         .padding()
-                        .background(vm.urlInput.isEmpty ? Color.gray : Color.redPrimary)
+                        .background(Color.redPrimary)
                         .foregroundColor(.white)
                         .cornerRadius(14)
                     }
-                    .disabled(vm.urlInput.isEmpty)
+                    .disabled(vm.urlInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
 
                     if !vm.errorMessage.isEmpty {
                         Text("⚠️ \(vm.errorMessage)")
                             .foregroundColor(.red)
-                            .padding(.top)
+                            .padding(.top, 6)
                     }
 
-                    Spacer()
+                    Spacer(minLength: 30)
                 }
                 .padding()
             }
@@ -142,21 +171,131 @@ struct PredictWithLink: View {
         }
         .navigationBarBackButtonHidden(true)
         .onReceive(vm.$result.compactMap { $0 }) { news in
-            // Hindari push dobel kalau publisher emit lagi
             guard !hasNavigatedToResult else { return }
             hasNavigatedToResult = true
 
-            // Simpan hasil ke store
             predictionStore.latestPrediction = news
-
-            // Navigate via router
             router.navigate(to: .predictResult)
         }
     }
 }
 
+// MARK: - Predict With News (title + content)
+struct PredictWithNews: View {
+    @StateObject private var vm = PredictionViewModel()
+    @EnvironmentObject private var router: Router
+    @EnvironmentObject private var predictionStore: PredictionStore
 
-// MARK: - Auto Close Keyboard
+    @State private var hasNavigatedToResult = false
+
+    private var isFormValid: Bool {
+        !vm.titleInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
+        !vm.contentInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
+    var body: some View {
+        ZStack {
+            ScrollView(showsIndicators: false) {
+                VStack(alignment: .leading, spacing: 20) {
+
+                    HStack {
+                        Button(action: { router.navigateBack() }) {
+                            Image(systemName: "chevron.left")
+                                .font(.system(size: 18, weight: .medium))
+                                .foregroundColor(.black)
+                                .padding(8)
+                        }
+                        Spacer()
+                    }
+
+                    Text("News Prediction")
+                        .font(.largeTitle.bold())
+                        .padding(.top, 10)
+
+                    Text("Paste your news article title and content below to analyze.")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+
+                    // TITLE FIELD
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("News Title")
+                            .font(.headline)
+
+                        TextField("Enter news title...", text: $vm.titleInput)
+                            .padding()
+                            .background(Color(.secondarySystemBackground))
+                            .cornerRadius(16)
+                    }
+
+                    // CONTENT FIELD
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("News Content")
+                            .font(.headline)
+
+                        TextEditor(text: $vm.contentInput)
+                            .frame(height: 180)
+                            .padding(10)
+                            .background(Color(.secondarySystemBackground))
+                            .cornerRadius(16)
+                    }
+
+                    // BUTTON
+                    Button {
+                        hideKeyboard()
+                        hasNavigatedToResult = false
+                        vm.predictNews()
+                    } label: {
+                        HStack {
+                            Spacer()
+                            Text("Predict")
+                                .font(.headline)
+                                .foregroundColor(.white)
+                            Spacer()
+                        }
+                        .padding()
+                        .background(
+                            LinearGradient(
+                                colors: [
+                                    Color.redPrimary,
+                                    Color.redPrimary.opacity(0.7)
+                                ],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .cornerRadius(18)
+                        .shadow(color: .black.opacity(0.15), radius: 8, x: 0, y: 4)
+                    }
+                    .disabled(!isFormValid)
+
+                    if !vm.errorMessage.isEmpty {
+                        Text("⚠️ \(vm.errorMessage)")
+                            .foregroundColor(.red)
+                            .padding(.top, 6)
+                    }
+
+                    Spacer(minLength: 30)
+                }
+                .padding()
+            }
+
+            if vm.isLoading {
+                LoadingView()
+            }
+        }
+        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarBackButtonHidden(true)
+        .onReceive(vm.$result.compactMap { $0 }) { news in
+            guard !hasNavigatedToResult else { return }
+            hasNavigatedToResult = true
+
+            predictionStore.latestPrediction = news
+            router.navigate(to: .predictResult)
+        }
+    }
+}
+
+// MARK: - Helpers
 extension View {
     func hideKeyboard() {
         UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder),
@@ -164,7 +303,7 @@ extension View {
     }
 }
 
-
+// (Opsional) Kalau masih kepake di file ini:
 struct SectionCard<Content: View>: View {
     let title: String
     let content: () -> Content
@@ -176,14 +315,13 @@ struct SectionCard<Content: View>: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text(title)
-                .font(.headline)
+            Text(title).font(.headline)
             content()
         }
         .padding()
         .background(Color(.systemBackground))
         .cornerRadius(16)
-        .shadow(radius: 2, y: 1)
+        .shadow(radius: 2, x: 0, y: 1)
     }
 }
 
@@ -199,85 +337,5 @@ struct LabelCapsule: View {
             .background(color.opacity(0.15))
             .foregroundColor(color)
             .clipShape(Capsule())
-    }
-}
-
-
-struct PredictWithNews: View {
-    @State private var title: String = ""
-    @State private var content: String = ""
-    @EnvironmentObject private var router: Router
-    var body: some View {
-        ScrollView {
-            HStack {
-                Button(action: { router.navigateBack() }) {
-                    Image(systemName: "chevron.left")
-                        .font(.system(size: 18, weight: .medium))
-                        .foregroundColor(.black)
-                        .padding(8)
-                }
-                Spacer()
-            }
-            .padding(.horizontal, 10)
-            VStack(alignment: .leading, spacing: 20) {
-                
-                Text("News Prediction")
-                    .font(.largeTitle.bold())
-                    .padding(.top, 10)
-                
-                Text("Paste your news article title and content below to analyze.")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-                
-                // TITLE FIELD
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("News Title")
-                        .font(.headline)
-                    
-                    TextField("Enter news title...", text: $title)
-                        .padding()
-                        .background(Color(.secondarySystemBackground))
-                        .cornerRadius(16)
-                }
-                
-                // CONTENT FIELD
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("News Content")
-                        .font(.headline)
-                    
-                    TextEditor(text: $content)
-                        .frame(height: 180)
-                        .padding(10)
-                        .background(Color(.secondarySystemBackground))
-                        .cornerRadius(16)
-                }
-                
-                // BUTTON
-                Button(action: {
-                }) {
-                    HStack {
-                        Spacer()
-                        Text("Predict")
-                            .font(.headline)
-                            .foregroundColor(.white)
-                        Spacer()
-                    }
-                    .padding()
-                    .background(
-                        LinearGradient(colors: [Color.redPrimary, Color.redPrimary.opacity(0.7)],
-                                       startPoint: .topLeading,
-                                       endPoint: .bottomTrailing)
-                    )
-                    .cornerRadius(18)
-                    .shadow(color: .black.opacity(0.15), radius: 8, x: 0, y: 4)
-                }
-                .padding(.top, 10)
-                
-                Spacer()
-            }
-            .padding()
-        }
-        .navigationBarTitleDisplayMode(.inline)
-        .navigationBarBackButtonHidden(true)
     }
 }
