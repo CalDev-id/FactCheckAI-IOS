@@ -18,9 +18,9 @@ struct ContentView: View {
                 .tag(Router.Tab.check.rawValue)
                 .tabItem { Image(systemName: "magnifyingglass"); Text("Check") }
 
-            ChatView()
-                .tag(Router.Tab.chat.rawValue)
-                .tabItem { Image(systemName: "message"); Text("Chat") }
+//            ChatView()
+//                .tag(Router.Tab.chat.rawValue)
+//                .tabItem { Image(systemName: "message"); Text("Chat") }
 
             ProfileView()
                 .tag(Router.Tab.profile.rawValue)

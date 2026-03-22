@@ -18,6 +18,8 @@ final class ProfileManager: ObservableObject {
     @Published var errorMessage: String?
 
     private let baseURL = "https://api.caldev.my.id"
+//    private let baseURL = "http://192.168.1.6:8000"
+
     private var hasLoadedMyNews = false
 
     private var currentFetchTask: Task<Void, Never>?

@@ -18,6 +18,7 @@ final class AuthManager: ObservableObject {
     @Published var avatarURL: String?
 
     private let baseURL = "https://api.caldev.my.id"
+//    private let baseURL = "http://192.168.1.6:8000"
 
     // MARK: - Init
     init() {

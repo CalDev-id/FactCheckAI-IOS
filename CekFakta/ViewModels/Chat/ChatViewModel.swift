@@ -7,6 +7,8 @@ class ChatViewModel: ObservableObject {
     @Published var errorMessage: String? = nil
 
     private let baseURL = "https://api.caldev.my.id/chat"
+//    private let baseURL = "http://192.168.1.6:8000"
+
 
     private var userKey: String? = nil
     private var cancellables = Set<AnyCancellable>()

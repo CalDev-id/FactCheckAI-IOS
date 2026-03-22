@@ -72,7 +72,7 @@ struct PredictResult: View {
 
                     VStack(alignment: .leading) {
                         // TITLE
-                        Text(prediction.title ?? "Tidak ada judul")
+                        Text(prediction.claim ?? "Tidak ada judul")
                             .font(.title2)
                             .fontWeight(.semibold)
                             .padding(.vertical, 0)
@@ -81,7 +81,7 @@ struct PredictResult: View {
 
                         // CONTENT
                         ExpandableText(
-                            text: prediction.content ?? "Tidak ada konten",
+                            text: prediction.explanation ?? "Tidak ada konten",
                             lineLimit: 15
                         )
                         .padding(.bottom, 10)

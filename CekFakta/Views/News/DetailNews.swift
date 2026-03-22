@@ -85,7 +85,7 @@ struct DetailNews: View {
                         .cornerRadius(5)
                         .shadow(radius: 2)
                         
-                        Text(news.title ?? "-")
+                        Text(news.claim ?? "-")
                             .font(.title2)
                             .fontWeight(.semibold)
                             .padding(.vertical, 10)
@@ -133,7 +133,7 @@ struct DetailNews: View {
                         Divider()
                         
                         ExpandableText(
-                            text: news.content ?? "-",
+                            text: news.explanation ?? "-",
                             lineLimit: 15 // tampilkan hanya 3 baris pertama
                         )
                         .padding(.bottom, 10)
@@ -277,7 +277,7 @@ struct ExpandableText: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 5) {
-            Text(text.replacingOccurrences(of: "\\n", with: "\n"))
+            Text(.init(text.replacingOccurrences(of: "\\n", with: "\n")))
                 .font(.body)
                 .multilineTextAlignment(.leading)
                 .lineLimit(expanded ? nil : lineLimit) // <-- batasi jumlah baris

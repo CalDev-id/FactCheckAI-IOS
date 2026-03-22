@@ -44,7 +44,7 @@ struct TopNewsCard: View {
                         }
                     }
                     HStack{
-                        Text(news.title ?? "-")
+                        Text(news.claim ?? "-")
                             .font(.headline)
                             .foregroundColor(.white)
                             .lineLimit(2)
@@ -110,7 +110,7 @@ struct NewsRow: View {
                             .foregroundColor(.gray)
                     }
                 }
-                Text(news.title ?? "-")
+                Text(news.claim ?? "-")
                     .font(.headline)
                     .lineLimit(2)
                     .padding(.trailing, 10)

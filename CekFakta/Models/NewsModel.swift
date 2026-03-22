@@ -9,6 +9,7 @@ import Foundation
 
 struct News: Identifiable, Codable {
     let id: String?
+    let claim: String?
     let url: String?
     let title: String?
     let content: String?

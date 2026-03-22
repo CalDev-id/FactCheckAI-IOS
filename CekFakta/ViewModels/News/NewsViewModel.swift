@@ -14,6 +14,9 @@ class NewsViewModel: ObservableObject {
     @Published var errorMessage: String?
 
     private let baseURL = "https://api.caldev.my.id"
+//    private let baseURL = "http://192.168.1.6:8000"
+
+    
     private var hasLoadedOnce = false
 
     func loadIfNeeded(force: Bool = false) async {
@@ -55,6 +58,8 @@ class DetailNewsViewModel: ObservableObject {
     @Published var errorMessage: String?
 
     let baseURL = "https://api.caldev.my.id"
+//    private let baseURL = "http://192.168.1.6:8000"
+
 
     func fetchDetail(newsId: String) async {
         guard let url = URL(string: "\(baseURL)/news/id/\(newsId)") else {
@@ -83,9 +88,12 @@ class ShareNewsViewModel: ObservableObject {
     @Published var errorMessage: String?
 
     private let baseURL = "https://api.caldev.my.id"
+//    private let baseURL = "http://192.168.1.6:8000"
+
 
     // DTO LOKAL (PRIVATE)
     private struct SharePayload: Codable {
+        let claim: String
         let url: String
         let title: String
         let content: String
@@ -103,6 +111,7 @@ class ShareNewsViewModel: ObservableObject {
         }
 
         let payload = SharePayload(
+            claim: news.claim ?? "",
             url: news.url ?? "",
             title: news.title ?? "",
             content: news.content ?? "",
