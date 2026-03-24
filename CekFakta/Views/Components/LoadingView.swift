@@ -14,6 +14,12 @@ struct InfoCard: Identifiable {
 }
 
 struct LoadingView: View {
+    @State private var isAnimating = false
+    @State private var start: CGFloat = 0.0
+    @State private var end: CGFloat = 0.2
+    @State private var progress: CGFloat = 0.0
+    let duration: Double = 50.0
+    
     let cards: [InfoCard] = [
         InfoCard(
             title: "The More You Know",
@@ -30,14 +36,66 @@ struct LoadingView: View {
         VStack(alignment: .center){
             Spacer()
             Image("loading")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 180, height: 180)
+                .overlay(
+                    GeometryReader { geo in
+                        let size = geo.size.width
+                        
+                        RoundedRectangle(cornerRadius: 0)
+                            .trim(from: start, to: end)
+                            .stroke(
+                                Color.redPrimary,
+                                style: StrokeStyle(lineWidth: 4, lineCap: .round)
+                            )
+                            .frame(width: size * 0.85, height: size * 0.85)
+                            .rotationEffect(.degrees(45))
+                            .position(x: size / 2, y: size / 2)
+                            .scaleEffect(0.85)
+                    }
+                )
+                
+                .onAppear {
+                    withAnimation(.linear(duration: 1).repeatForever(autoreverses: false)) {
+                        start = 1
+                        end = start + 0.2
+                    }
+                }
             Text("Scanning Article...")
                 .font(.headline)
+                .padding(.top,10)
             Text("Currently scanning and reviewing this article.\nPlease wait a minute for the result.")
                 .multilineTextAlignment(.center)
                 .fontWeight(.light)
                 .font(.subheadline)
                 .foregroundColor(.gray)
-            
+                .padding(.bottom, 20)
+            VStack(spacing: 16) {
+
+                GeometryReader { geo in
+                    let width = geo.size.width
+
+                    ZStack(alignment: .leading) {
+                        Rectangle()
+                            .fill(Color.gray.opacity(0.2))
+
+                        Rectangle()
+                            .fill(Color.redPrimary)
+                            .frame(width: width * progress)
+                    }
+                    .cornerRadius(6)
+                }
+                .frame(height: 12)
+                .frame(width: 250)
+
+                Text("\(Int(progress * 100))%")
+                    .font(.headline)
+            }
+            .onAppear {
+                startLoading()
+            }
+        
             Spacer()
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 12) {
@@ -71,22 +129,28 @@ struct LoadingView: View {
                 .padding(.bottom, 50)
                 .padding(.top, 80)
             }
-//            Button(action: {}, label: {
-//                Text("Cancel")
-//                    .fontWeight(.medium)
-//            })
-//            .foregroundStyle(.black)
-//            .frame(maxWidth: .infinity)
-//            .padding(.vertical)
-//            .background(
-//                RoundedRectangle(cornerRadius: 2)
-//                    .stroke(Color.redPrimary, lineWidth: 2)
-//            )
-//            .padding(.horizontal, 20)
         }
         .background(.white)
     }
+    func startLoading() {
+        let steps = 1000
+        let interval = duration / Double(steps)
+
+        Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { timer in
+            if progress >= 1.0 {
+                timer.invalidate()
+            } else {
+                progress += 1.0 / CGFloat(steps)
+            }
+        }
+    }
 }
+
+
+
+//#Preview {
+//    LoadingView()
+//}
 
 #Preview {
     LoadingView()

@@ -111,13 +111,20 @@ struct HomeScreen: View {
 
 extension HomeScreen {
     var filteredNews: [News] {
+        let filtered: [News]
+
         switch selectedIndex {
         case 1:
-            return vm.newsList.filter { $0.classification?.final_label?.lowercased() == "valid" }
+            filtered = vm.newsList.filter {
+                $0.classification?.final_label?.lowercased() == "valid"
+            }
         case 2:
-            return vm.newsList.filter { $0.classification?.final_label?.lowercased() == "hoaks" }
+            filtered = vm.newsList.filter {
+                $0.classification?.final_label?.lowercased() == "hoaks"
+            }
         default:
-            return vm.newsList
+            filtered = vm.newsList
         }
-    }
-}
+
+        return Array(filtered.prefix(10))
+    }}
