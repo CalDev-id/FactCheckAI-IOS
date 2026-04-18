@@ -24,21 +24,21 @@ final class ProfileManager: ObservableObject {
 
     private var currentFetchTask: Task<Void, Never>?
 
-    func fetchMyNewsIfNeeded(force: Bool = false) {
+    func fetchMyNewsIfNeeded(force: Bool = false, isAdmin: Bool = false) {
         // untuk load sekali / sesuai kebutuhan
         if isLoading { return }
         if hasLoadedMyNews && !force { return }
-        refreshMyNews(force: force)
+        refreshMyNews(force: force, isAdmin: isAdmin)
     }
 
     /// ✅ Gunakan ini untuk pull-to-refresh (tidak ikut cancel dari refreshable)
-    func refreshMyNews(force: Bool = true) {
+    func refreshMyNews(force: Bool = true, isAdmin: Bool = false) {
         // cancel task sebelumnya biar "latest wins"
         currentFetchTask?.cancel()
 
         currentFetchTask = Task.detached(priority: .userInitiated) { [weak self] in
             guard let self else { return }
-            await self._fetchMyNewsDetached(force: force)
+            await self._fetchMyNewsDetached(force: force, isAdmin: isAdmin)
         }
     }
 
@@ -50,7 +50,7 @@ final class ProfileManager: ObservableObject {
 
     // MARK: - Detached worker (jalan di background, update state di MainActor)
 
-    private func _fetchMyNewsDetached(force: Bool) async {
+    private func _fetchMyNewsDetached(force: Bool, isAdmin: Bool) async {
         await MainActor.run {
             self.errorMessage = nil
             self.isLoading = true
@@ -64,7 +64,9 @@ final class ProfileManager: ObservableObject {
             return
         }
 
-        guard var comps = URLComponents(string: "\(baseURL)/news/my") else {
+        let path = isAdmin ? "admin" : "my"
+
+        guard var comps = URLComponents(string: "\(baseURL)/news/\(path)") else {
             await MainActor.run { self.errorMessage = "Invalid URL" }
             return
         }
@@ -155,7 +157,7 @@ final class ProfileManager: ObservableObject {
         
     }
     
-    func deleteNews(_ item: News) {
+    func deleteNews(_ item: News, isAdmin: Bool = false) {
         guard let newsId = item.id else { return }
 
         // Optimistic UI
@@ -165,7 +167,7 @@ final class ProfileManager: ObservableObject {
 
         Task {
             do {
-                try await _deleteMyNews(newsId: newsId)
+                try await _deleteNews(newsId: newsId, isAdmin: isAdmin)
             } catch {
                 // rollback kalau gagal
                 self.news = snapshot
@@ -175,12 +177,13 @@ final class ProfileManager: ObservableObject {
     }
 
 
-    private func _deleteMyNews(newsId: String) async throws {
+    private func _deleteNews(newsId: String, isAdmin: Bool) async throws {
         guard let token = Keychain.load("access_token") else {
             throw URLError(.userAuthenticationRequired)
         }
 
-        let url = URL(string: "\(baseURL)/news/my/\(newsId)")!
+        let path = isAdmin ? "admin" : "my"
+        let url = URL(string: "\(baseURL)/news/\(path)/\(newsId)")!
 
         var request = URLRequest(url: url)
         request.httpMethod = "DELETE"

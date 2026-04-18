@@ -78,7 +78,7 @@ struct HomeScreen: View {
 
                     Divider().padding(.top, -9)
 
-                    if let top = filteredNews.last, let _ = top.id {
+                    if let top = topNews, let _ = top.id {
                         TopNewsCard(news: top)
                             .onTapGesture { router.navigate(to: .detailNews(id: top.id!)) }
                     }
@@ -87,7 +87,7 @@ struct HomeScreen: View {
                         .offset(y: 70)
                         .padding(.horizontal)
 
-                    ForEach(Array(filteredNews.dropLast().reversed())) { item in
+                    ForEach(rowNews) { item in
                         NewsRow(news: item)
                             .contentShape(Rectangle())
                             .onTapGesture { router.navigate(to: .detailNews(id: item.id!)) }
@@ -111,20 +111,59 @@ struct HomeScreen: View {
 
 extension HomeScreen {
     var filteredNews: [News] {
-        let filtered: [News]
-
         switch selectedIndex {
         case 1:
-            filtered = vm.newsList.filter {
+            return vm.newsList.filter {
                 $0.classification?.final_label?.lowercased() == "valid"
             }
         case 2:
-            filtered = vm.newsList.filter {
+            return vm.newsList.filter {
                 $0.classification?.final_label?.lowercased() == "hoaks"
             }
         default:
-            filtered = vm.newsList
+            return vm.newsList
+        }
+    }
+
+    var sortedFilteredNews: [News] {
+        filteredNews.sorted {
+            parsedDate($0.inserted_at) ?? .distantPast > parsedDate($1.inserted_at) ?? .distantPast
+        }
+    }
+
+    var topNews: News? {
+        sortedFilteredNews.first
+    }
+
+    var rowNews: [News] {
+        Array(sortedFilteredNews.dropFirst().prefix(10))
+    }
+
+    private func parsedDate(_ value: String?) -> Date? {
+        guard let value else { return nil }
+
+        let isoFormatter = ISO8601DateFormatter()
+        isoFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+
+        if let date = isoFormatter.date(from: value) {
+            return date
         }
 
-        return Array(filtered.prefix(10))
-    }}
+        isoFormatter.formatOptions = [.withInternetDateTime]
+        if let date = isoFormatter.date(from: value) {
+            return date
+        }
+
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = TimeZone(secondsFromGMT: 0)
+        formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSSSSXXXXX"
+
+        if let date = formatter.date(from: value) {
+            return date
+        }
+
+        formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ssXXXXX"
+        return formatter.date(from: value)
+    }
+}
