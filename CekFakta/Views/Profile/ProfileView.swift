@@ -103,7 +103,7 @@ struct ProfileView: View {
                 .listRowSeparator(.hidden)
 
             VStack(alignment: .leading,) {
-                Text("My Posts")
+                Text(auth.isAdmin ? "Manage Posts" : "My Posts")
                     .font(.headline)
                     .multilineTextAlignment(.leading)
 
@@ -117,7 +117,7 @@ struct ProfileView: View {
                     ProgressView()
                         .frame(maxWidth: .infinity)
                 } else if vm.news.isEmpty {
-                    Text("No posts yet")
+                    Text(auth.isAdmin ? "No posts available" : "No posts yet")
                         .foregroundColor(.secondary)
                         .font(.caption)
                 }
@@ -150,7 +150,11 @@ struct ProfileView: View {
         }
         .listStyle(.plain)
         .refreshable {
-            vm.refreshMyNews(force: true)
+            vm.refreshMyNews(force: true, isAdmin: auth.isAdmin)
+        }
+        .onChange(of: auth.userRole) { _ in
+            vm.resetCache()
+            vm.fetchMyNewsIfNeeded(force: true, isAdmin: auth.isAdmin)
         }
         .sheet(isPresented: $showEditProfile) {
             EditProfileView()
@@ -164,7 +168,7 @@ struct ProfileView: View {
         ) {
             Button("Delete", role: .destructive) {
                 if let item = pendingDelete {
-                    vm.deleteNews(item)     // ✅ delete di sini saja
+                    vm.deleteNews(item, isAdmin: auth.isAdmin)     // ✅ delete di sini saja
                 }
                 pendingDelete = nil
             }

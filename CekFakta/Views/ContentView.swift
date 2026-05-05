@@ -28,7 +28,7 @@ struct ContentView: View {
         }
         .background(.black)
         .accentColor(.red)
-        .task { profile.fetchMyNewsIfNeeded(force: false) }
+        .task { profile.fetchMyNewsIfNeeded(force: false, isAdmin: auth.isAdmin) }
     }
 }
 

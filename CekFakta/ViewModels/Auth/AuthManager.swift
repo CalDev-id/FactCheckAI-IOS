@@ -16,6 +16,11 @@ final class AuthManager: ObservableObject {
     @Published var userEmail: String?
     @Published var userName: String?
     @Published var avatarURL: String?
+    @Published var userRole: String?
+
+    var isAdmin: Bool {
+        userRole == "admin"
+    }
 
     private let baseURL = "https://api.caldev.my.id"
 //    private let baseURL = "http://192.168.1.6:8000"
@@ -91,6 +96,7 @@ final class AuthManager: ObservableObject {
         userEmail = nil
         userName = nil
         avatarURL = nil
+        userRole = nil
     }
 
     // MARK: - Fetch User
@@ -120,6 +126,7 @@ final class AuthManager: ObservableObject {
             userEmail = user.email
             userName = user.name
             avatarURL = user.avatar_url
+            userRole = user.role
             isAuthenticated = true
             return true
         } catch {
